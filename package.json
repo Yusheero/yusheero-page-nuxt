@@ -1,0 +1,31 @@
+{
+  "name": "yusheero-page",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@pinia/nuxt": "^0.11.1",
+    "@twallpaper/vue": "^2.1.2",
+    "keen-slider": "^6.8.6",
+    "lucide-vue-next": "^0.468.0",
+    "nuxt": "^3.17.6",
+    "pinia": "^3.0.3",
+    "sass-embedded": "^1.81.0",
+    "three": "^0.171.0",
+    "vue": "^3.5.17",
+    "vue-router": "^4.5.1",
+    "vue3-simple-icons": "^13.2.0"
+  },
+  "devDependencies": {
+    "@iconify-json/carbon": "^1.2.5",
+    "@nuxt/devtools": "latest",
+    "@nuxtjs/google-fonts": "^3.0.2",
+    "@types/three": "^0.172.0"
+  }
+}
