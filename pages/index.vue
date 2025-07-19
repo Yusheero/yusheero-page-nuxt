@@ -16,7 +16,7 @@ useHead({
     <HomeReviews class="home-page__reviews" />
     <HomeTechnologies class="home-page__tech" />
     <HomeTwitch class="home-page__twitch" />
-    <HomeScene class="home-page__scene" />
+    <HomeTerminal class="home-page__terminal" />
   </div>
 </template>
 
@@ -31,10 +31,10 @@ useHead({
   grid-template-rows: 1fr 2fr 7rem 1.5fr;
   gap: 8px;
   grid-template-areas:
-    "logo      twitch    name      name      scene   scene"
-    "last-post last-post last-post last-post scene   scene"
-    "tech      tech      tech      tech      tech    tech"
-    "gif       gif       reviews   reviews   reviews contacts";
+    "logo      twitch    name      name      terminal   terminal"
+    "last-post last-post last-post last-post terminal   terminal"
+    "tech      tech      tech      tech      tech       tech"
+    "gif       gif       reviews   reviews   reviews    contacts";
 
   &__navigation {
     position: absolute;
@@ -75,8 +75,8 @@ useHead({
     grid-area: twitch;
   }
 
-  &__scene {
-    grid-area: scene;
+  &__terminal {
+    grid-area: terminal;
   }
 }
 </style> 

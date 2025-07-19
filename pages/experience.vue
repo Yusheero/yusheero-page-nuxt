@@ -6,7 +6,7 @@ const points = [
   {
     id: 'dns',
     label: 'DNS Technologies',
-    position: 0, // px относительно центра (левее на 200)
+    position: 75, // px относительно центра (левее на 200)
     info: {
       title: 'DNS Technologies',
       role: 'Frontend Developer',
@@ -16,15 +16,15 @@ const points = [
     }
   },
   {
-    id: 'newpoint',
-    label: 'New Company',
-    position: 200,
+    id: 'housevl',
+    label: 'HOUSEVL',
+    position: 300,
     info: {
-      title: 'New Company',
+      title: 'HOUSEVL',
       role: 'Frontend Developer',
       years: '2025 - present',
-      tags: ['Node.js', 'TypeScript', 'Nuxt'],
-      description: 'Searching for new job'
+      tags: ['Node.js', 'TypeScript', 'NextJS', 'React'],
+      description: 'Development NextJS applications'
     }
   }
 ];

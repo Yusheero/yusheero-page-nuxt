@@ -1,57 +1,82 @@
 <script setup>
 import { onMounted, onUnmounted, ref } from 'vue';
 import { terminalData, voightKampffQuestions } from './terminal-data.js';
-import { TerminalGames } from './terminal-game.js';
 import './terminal-styles.scss';
 
-// Reference to terminal container
-const terminalRef = ref(null);
-const cursorRef = ref(null);
+/**
+ * Основной компонент ретро-терминала с эффектами старого монитора
+ * Включает в себя:
+ * - Симуляцию загрузки системы
+ * - Эффект печатной машинки для вывода текста
+ * - Тест Войта-Кампфа для доступа к контактам
+ * - Мини-игры
+ * - Смену цветовых схем
+ * - Полноэкранный режим
+ * - Визуальные эффекты (глитч, помехи, мерцание)
+ */
 
-// Параметры терминала
-const isTerminalOn = ref(false);
-const isTerminalBooted = ref(false);
-const terminalText = ref('');
-const bootingProgress = ref(0);
-const inputText = ref('');
-const terminalHistory = ref([]);
-const cursorVisible = ref(true);
-const currentCommand = ref('');
-const isFullScreen = ref(false);
+// Ссылки на DOM элементы терминала
+const terminalRef = ref(null); // Контейнер терминала для прокрутки
+const cursorRef = ref(null); // Курсор ввода
 
-// Добавим параметры для визуальных эффектов
-const currentColorScheme = ref('green'); // green, amber, blue
-const isGlitchActive = ref(false);
-const isStaticActive = ref(false);
+/**
+ * Основные параметры состояния терминала
+ */
+const isTerminalOn = ref(false); // Включен ли терминал
+const isTerminalBooted = ref(false); // Загружена ли система
+const terminalText = ref(''); // Текущий текст, который печатается
+const bootingProgress = ref(0); // Прогресс загрузки (0-100%)
+const inputText = ref(''); // Введенный пользователем текст
+const terminalHistory = ref([]); // История команд и выводов
+const cursorVisible = ref(true); // Видимость курсора
+const currentCommand = ref(''); // Текущая команда в поле ввода
+const isFullScreen = ref(false); // Полноэкранный режим
 
-// Replicant test flags
-const isVoightKampffTestActive = ref(false);
-const currentVoightKampffQuestion = ref(0);
-const voightKampffPassed = ref(false);
-const voightKampffAttempts = ref(0);
+/**
+ * Параметры для визуальных эффектов терминала
+ */
+const currentColorScheme = ref('green'); // Текущая цветовая схема: green, amber, blue
+const isGlitchActive = ref(false); // Активен ли эффект глитча
+const isStaticActive = ref(false); // Активны ли помехи
 
-// Current print position and typing speed
-let currentTextPosition = 0;
-let typingInterval;
-let cursorBlinkInterval;
-let bootSequenceTimeout;
+/**
+ * Флаги для теста Войта-Кампфа (проверка на человека)
+ */
+const isVoightKampffTestActive = ref(false); // Активен ли тест
+const currentVoightKampffQuestion = ref(0); // Номер текущего вопроса
+const voightKampffPassed = ref(false); // Прошел ли пользователь тест
+const voightKampffAttempts = ref(0); // Количество попыток прохождения
 
-// Инициализация игр
-const terminalGames = new TerminalGames();
+/**
+ * Переменные для управления анимациями и таймерами
+ */
+let currentTextPosition = 0; // Текущая позиция в тексте при печати
+let typingInterval; // Интервал для эффекта печатной машинки
+let cursorBlinkInterval; // Интервал мигания курсора
+let bootSequenceTimeout; // Таймаут для последовательности загрузки
 
-// Переменные для активной игры
+/**
+ * Переменная для активной игры в терминале
+ */
 const activeGame = ref(null);
 
-// Terminal boot simulation
+/**
+ * Симуляция загрузки терминала с эффектами старого монитора
+ * Включает:
+ * - Эффект мерцания при включении
+ * - Случайные задержки в процессе загрузки
+ * - Визуальные эффекты глитча
+ * - Последовательный вывод сообщений загрузки
+ */
 const bootTerminal = () => {
   isTerminalOn.value = true;
   bootingProgress.value = 0;
-  terminalHistory.value = []; // Clear history
+  terminalHistory.value = []; // Очищаем историю
   
   // Активируем эффект глитча при загрузке
   triggerGlitchEffect(1000);
   
-  // Simulate flickering when turning on (old CRT effect)
+  // Симулируем мерцание при включении (эффект старого ЭЛТ монитора)
   const terminalElement = document.querySelector('.retro-terminal-container');
   if (terminalElement) {
     terminalElement.classList.add('power-on');
@@ -60,33 +85,33 @@ const bootTerminal = () => {
     }, 1000);
   }
   
-  // Simulate loading with occasional stutters for authenticity
+  // Симулируем загрузку с случайными задержками для реалистичности
   const bootInterval = setInterval(() => {
-    // Random progress increments with occasional pauses
-    if (Math.random() > 0.2) { // 80% chance to increment
+    // Случайные приращения прогресса с периодическими паузами
+    if (Math.random() > 0.2) { // 80% вероятность приращения
       bootingProgress.value += Math.random() * 5;
     }
     
-    // Occasionally show a slight stutter in the loading
+    // Периодически показываем небольшую задержку в загрузке
     if (Math.random() > 0.95 && bootingProgress.value > 10 && bootingProgress.value < 90) {
-      bootingProgress.value -= Math.random() * 2; // Slight backwards movement
+      bootingProgress.value -= Math.random() * 2; // Небольшое обратное движение
     }
     
     if (bootingProgress.value >= 100) {
       bootingProgress.value = 100;
       clearInterval(bootInterval);
       
-      // After progress bar is filled, wait a moment before proceeding
+      // После заполнения прогресс-бара ждем момент перед продолжением
       bootSequenceTimeout = setTimeout(() => {
-        // Now transition to the boot message screen
+        // Теперь переходим к экрану сообщений загрузки
         isTerminalBooted.value = true;
         
-        // Clear history and start printing boot messages
+        // Очищаем историю и начинаем печатать сообщения загрузки
         setTimeout(() => {
-          terminalText.value = ''; // Ensure no partial text is displayed
+          terminalText.value = ''; // Убеждаемся, что нет частичного текста
           printTextToTerminal(terminalData.bootMessages.join('\n'));
           
-          // After boot messages are complete, show welcome message
+          // После завершения сообщений загрузки показываем приветствие
           setTimeout(() => {
             printTextToTerminal(terminalData.welcomeMessage.join('\n'));
             startCursorBlink();
@@ -97,7 +122,10 @@ const bootTerminal = () => {
   }, 100);
 };
 
-// Print text with typewriter effect
+/**
+ * Печать текста с эффектом печатной машинки
+ * @param {string} text - Текст для печати
+ */
 const printTextToTerminal = (text) => {
   if (typingInterval) {
     clearInterval(typingInterval);
@@ -108,7 +136,7 @@ const printTextToTerminal = (text) => {
   
   typingInterval = setInterval(() => {
     if (currentTextPosition < text.length) {
-      // Simulate random delays for more realistic typing effect
+      // Симулируем случайные задержки для более реалистичного эффекта печати
       if (Math.random() > 0.95) {
         setTimeout(() => {
           terminalText.value += text[currentTextPosition];
@@ -126,46 +154,54 @@ const printTextToTerminal = (text) => {
       terminalText.value = '';
       scrollToBottom();
     }
-  }, 15); // Typing speed
+  }, 15); // Скорость печати
 };
 
-// Start the Voight-Kampff test
+/**
+ * Запуск теста Войта-Кампфа для проверки на человека
+ * Тест основан на анализе эмоциональных реакций
+ */
 const startVoightKampffTest = () => {
   isVoightKampffTestActive.value = true;
   currentVoightKampffQuestion.value = 0;
   
   printTextToTerminal(terminalData.contactForm.join('\n'));
   
-  // Show the first question after a delay
+  // Показываем первый вопрос после задержки
   setTimeout(() => {
     askVoightKampffQuestion();
   }, terminalData.contactForm.join('\n').length * 15 + 1000);
 };
 
-// Ask the current Voight-Kampff question
+/**
+ * Задаем текущий вопрос теста Войта-Кампфа
+ */
 const askVoightKampffQuestion = () => {
   if (currentVoightKampffQuestion.value >= voightKampffQuestions.length) {
-    // Test completed
+    // Тест завершен
     completeVoightKampffTest();
     return;
   }
   
   const question = voightKampffQuestions[currentVoightKampffQuestion.value];
   
-  let questionText = `>>> QUESTION ${currentVoightKampffQuestion.value + 1}/${voightKampffQuestions.length}:\n${question.question}\n`;
+  let questionText = `>>> ВОПРОС ${currentVoightKampffQuestion.value + 1}/${voightKampffQuestions.length}:\n${question.question}\n`;
   
   printTextToTerminal(questionText);
 };
 
-// Process the answer to the current Voight-Kampff question
+/**
+ * Обрабатываем ответ на текущий вопрос теста Войта-Кампфа
+ * @param {string} answer - Ответ пользователя
+ */
 const processVoightKampffAnswer = (answer) => {
   const currentQuestion = voightKampffQuestions[currentVoightKampffQuestion.value];
   const answerUpperCase = answer.toUpperCase().trim();
   
-  // Record the answer
+  // Записываем ответ
   terminalHistory.value.push(`> ${answer}`);
   
-  // Determine if the answer is "human-like"
+  // Определяем, является ли ответ "человеческим"
   let isHumanLikeResponse = false;
   
   // Проверяем, есть ли ответ пользователя в списке правильных ответов
@@ -181,60 +217,62 @@ const processVoightKampffAnswer = (answer) => {
     );
   }
   
-  // Анализ ответа
+  // Анализ ответа с медицинскими показателями
   let analysisText = '';
   if (isHumanLikeResponse) {
     analysisText = [
-      '>>> ANALYZING RESPONSE...',
-      '>>> Pupil dilation: NORMAL',
-      '>>> Respiration rate: WITHIN HUMAN PARAMETERS',
-      '>>> Response latency: ACCEPTABLE',
+      '>>> АНАЛИЗ ОТВЕТА...',
+      '>>> Расширение зрачков: НОРМАЛЬНОЕ',
+      '>>> Частота дыхания: В ПРЕДЕЛАХ ЧЕЛОВЕЧЕСКИХ ПАРАМЕТРОВ',
+      '>>> Задержка ответа: ПРИЕМЛЕМАЯ',
       ''
     ].join('\n');
   } else {
     analysisText = [
-      '>>> ANALYZING RESPONSE...',
-      '>>> Pupil dilation: ABNORMAL',
-      '>>> Respiration rate: ELEVATED',
-      '>>> Response latency: SUSPICIOUS',
+      '>>> АНАЛИЗ ОТВЕТА...',
+      '>>> Расширение зрачков: АНОМАЛЬНОЕ',
+      '>>> Частота дыхания: ПОВЫШЕННАЯ',
+      '>>> Задержка ответа: ПОДОЗРИТЕЛЬНАЯ',
       ''
     ].join('\n');
   }
   
   printTextToTerminal(analysisText);
   
-  // Proceed to the next question
+  // Переходим к следующему вопросу
   setTimeout(() => {
     if (isHumanLikeResponse) {
       currentVoightKampffQuestion.value++;
       
-      // If there are more questions, ask the next one
+      // Если есть еще вопросы, задаем следующий
       if (currentVoightKampffQuestion.value < voightKampffQuestions.length) {
         askVoightKampffQuestion();
       } else {
-        // Test completed successfully
+        // Тест успешно завершен
         voightKampffPassed.value = true;
         completeVoightKampffTest();
       }
     } else {
-      // Display warning about wrong answer
+      // Показываем предупреждение о неправильном ответе
       printTextToTerminal(terminalData.wrongAnswer.join('\n'));
       
-      // Delay before failing the test
+      // Задержка перед провалом теста
       setTimeout(() => {
-        // Failed the test
+        // Тест провален
         failVoightKampffTest();
       }, terminalData.wrongAnswer.join('\n').length * 15 + 1000);
     }
   }, analysisText.length * 15 + 1000);
 };
 
-// Complete the Voight-Kampff test
+/**
+ * Завершение теста Войта-Кампфа
+ */
 const completeVoightKampffTest = () => {
   if (voightKampffPassed.value) {
     printTextToTerminal(terminalData.contactSuccess.join('\n'));
     
-    // After success message, finish test
+    // После сообщения об успехе завершаем тест
     setTimeout(() => {
       isVoightKampffTestActive.value = false;
     }, terminalData.contactSuccess.join('\n').length * 15 + 1000);
@@ -243,26 +281,30 @@ const completeVoightKampffTest = () => {
   }
 };
 
-// Fail the Voight-Kampff test
+/**
+ * Провал теста Войта-Кампфа
+ */
 const failVoightKampffTest = () => {
   voightKampffAttempts.value++;
   printTextToTerminal(terminalData.errorMessages[1]);
   
-  // Reset the terminal after failure
+  // Перезагружаем терминал после провала
   setTimeout(() => {
     isVoightKampffTestActive.value = false;
     
-    // If too many attempts, lock them out completely
+    // Если слишком много попыток, полностью блокируем доступ
     if (voightKampffAttempts.value >= 3) {
       shutdownTerminal();
     } else {
-      // Just reboot the terminal
+      // Просто перезагружаем терминал
       rebootTerminal();
     }
   }, 3000);
 };
 
-// Reboot the terminal
+/**
+ * Перезагрузка терминала с сохранением количества попыток
+ */
 const rebootTerminal = () => {
   // Остановим любой процесс печати
   if (typingInterval) {
@@ -273,40 +315,40 @@ const rebootTerminal = () => {
   // Сбросим текущий текст
   terminalText.value = '';
   
-  // First indicate rebooting
+  // Сначала показываем сообщение о перезагрузке
   terminalHistory.value = []; // Очистим историю перед сообщением о перезагрузке
-  printTextToTerminal('>>> REBOOTING SYSTEM...');
+  printTextToTerminal('>>> ПЕРЕЗАГРУЗКА СИСТЕМЫ...');
   
   // Активируем эффект глитча при перезагрузке
   triggerGlitchEffect(1500);
   
-  // Reset terminal state but keep attempt count
+  // Сбрасываем состояние терминала, но сохраняем количество попыток
   setTimeout(() => {
-    // Set boot progress to 0 immediately
+    // Устанавливаем прогресс загрузки в 0 немедленно
     bootingProgress.value = 0;
-    // Disable terminal booted state BEFORE showing the boot screen
+    // Отключаем состояние загрузки ДО показа экрана загрузки
     isTerminalBooted.value = false;
     
-    // Show "rebooting" message for a moment before starting the boot sequence
+    // Показываем сообщение "перезагрузка" на момент перед началом последовательности загрузки
     setTimeout(() => {
-      // Simulate loading
+      // Симулируем загрузку
       const bootInterval = setInterval(() => {
-        bootingProgress.value += Math.random() * 8; // Slightly faster reboot
+        bootingProgress.value += Math.random() * 8; // Немного быстрее перезагрузка
         if (bootingProgress.value >= 100) {
           bootingProgress.value = 100;
           clearInterval(bootInterval);
           
-          // After progress bar is filled, wait a moment
+          // После заполнения прогресс-бара ждем момент
           bootSequenceTimeout = setTimeout(() => {
-            // Now transition to the boot screen
+            // Теперь переходим к экрану загрузки
             isTerminalBooted.value = true;
             
-            // Start printing boot messages
+            // Начинаем печатать сообщения загрузки
             setTimeout(() => {
-              terminalText.value = ''; // Ensure no partial text is displayed
+              terminalText.value = ''; // Убеждаемся, что нет частичного текста
               printTextToTerminal(terminalData.bootMessages.join('\n'));
               
-              // After boot messages are complete, show welcome message
+              // После завершения сообщений загрузки показываем приветствие
               setTimeout(() => {
                 printTextToTerminal(terminalData.welcomeMessage.join('\n'));
                 startCursorBlink();
@@ -319,7 +361,14 @@ const rebootTerminal = () => {
   }, 1500);
 };
 
-// Обработка команд
+/**
+ * Обработка команд терминала
+ * Поддерживает:
+ * - Базовые команды (HELP, SKILLS, PROJECTS, etc.)
+ * - Команды с параметрами (BLOG -FULL, THEME)
+ * - Тест Войта-Кампфа
+ * - Мини-игры
+ */
 const handleCommand = () => {
   if (!currentCommand.value.trim()) return;
   
@@ -343,7 +392,7 @@ const handleCommand = () => {
     return;
   }
   
-  // Если Voight-Kampff тест активен, обрабатываем ответ как ответ на тест
+  // Если тест Войта-Кампфа активен, обрабатываем ответ как ответ на тест
   if (isVoightKampffTestActive.value) {
     const answer = currentCommand.value.trim();
     currentCommand.value = '';
@@ -384,7 +433,7 @@ const handleCommand = () => {
       } else {
         printTextToTerminal(terminalData.accessDenied.join('\n'));
         
-        // Start the Voight-Kampff test after a delay
+        // Запускаем тест Войта-Кампфа после задержки
         setTimeout(() => {
           startVoightKampffTest();
         }, 2000);
@@ -426,7 +475,10 @@ const handleCommand = () => {
   scrollToBottom();
 };
 
-// Обработка команд блога с параметрами
+/**
+ * Обработка команд блога с параметрами
+ * @param {string} command - Команда с параметрами
+ */
 const handleBlogCommand = (command) => {
   if (command.startsWith('BLOG -FULL')) {
     // Проверяем, есть ли номер статьи
@@ -437,26 +489,28 @@ const handleBlogCommand = (command) => {
       printTextToTerminal(terminalData.blogFull[articleNumber].join('\n'));
     } else {
       printTextToTerminal([
-        '>>> ERROR: ARTICLE NOT FOUND',
-        '>>> USAGE: BLOG -FULL [number]',
-        '>>> AVAILABLE ARTICLES: 1, 2, 3',
+        '>>> ОШИБКА: СТАТЬЯ НЕ НАЙДЕНА',
+        '>>> ИСПОЛЬЗОВАНИЕ: BLOG -FULL [номер]',
+        '>>> ДОСТУПНЫЕ СТАТЬИ: 1, 2, 3',
         ''
       ].join('\n'));
     }
   } else {
     printTextToTerminal([
-      '>>> ERROR: UNKNOWN BLOG COMMAND',
-      '>>> AVAILABLE BLOG COMMANDS:',
-      '    BLOG       - list recent posts',
-      '    BLOG -FULL [number] - show full article',
+      '>>> ОШИБКА: НЕИЗВЕСТНАЯ КОМАНДА БЛОГА',
+      '>>> ДОСТУПНЫЕ КОМАНДЫ БЛОГА:',
+      '    BLOG       - список последних постов',
+      '    BLOG -FULL [номер] - показать полную статью',
       ''
     ].join('\n'));
   }
 };
 
-// Terminal shutdown
+/**
+ * Выключение терминала
+ */
 const shutdownTerminal = () => {
-  printTextToTerminal('>>> SHUTTING DOWN SYSTEM...');
+  printTextToTerminal('>>> ВЫКЛЮЧЕНИЕ СИСТЕМЫ...');
   
   setTimeout(() => {
     isTerminalBooted.value = false;
@@ -465,7 +519,10 @@ const shutdownTerminal = () => {
   }, 2000);
 };
 
-// Keyboard input handler
+/**
+ * Обработчик нажатий клавиш
+ * @param {KeyboardEvent} e - Событие клавиши
+ */
 const handleKeyDown = (e) => {
   if (!isTerminalBooted.value) return;
   
@@ -474,7 +531,9 @@ const handleKeyDown = (e) => {
   }
 };
 
-// Cursor blinking
+/**
+ * Мигание курсора
+ */
 const startCursorBlink = () => {
   if (cursorBlinkInterval) {
     clearInterval(cursorBlinkInterval);
@@ -482,10 +541,12 @@ const startCursorBlink = () => {
   
   cursorBlinkInterval = setInterval(() => {
     cursorVisible.value = !cursorVisible.value;
-  }, 530); // Cursor blink frequency
+  }, 530); // Частота мигания курсора
 };
 
-// Auto-scroll to terminal bottom
+/**
+ * Автоматическая прокрутка к низу терминала
+ */
 const scrollToBottom = () => {
   if (terminalRef.value) {
     setTimeout(() => {
@@ -494,14 +555,18 @@ const scrollToBottom = () => {
   }
 };
 
-// Clear all intervals
+/**
+ * Очистка всех интервалов и таймаутов
+ */
 const clearAllIntervals = () => {
   if (typingInterval) clearInterval(typingInterval);
   if (cursorBlinkInterval) clearInterval(cursorBlinkInterval);
   if (bootSequenceTimeout) clearTimeout(bootSequenceTimeout);
 };
 
-// Функция для переключения полноэкранного режима
+/**
+ * Переключение полноэкранного режима терминала
+ */
 const toggleFullScreen = () => {
   isFullScreen.value = !isFullScreen.value;
   
@@ -513,15 +578,18 @@ const toggleFullScreen = () => {
   }
 };
 
-// Функция для смены цветовой схемы
+/**
+ * Смена цветовой схемы терминала
+ * @param {string} theme - Название темы (GREEN, AMBER, BLUE)
+ */
 const changeColorScheme = (theme) => {
   const validThemes = ['GREEN', 'AMBER', 'BLUE'];
   const themeName = theme.toUpperCase();
   
   if (!validThemes.includes(themeName)) {
     printTextToTerminal([
-      `>>> ERROR: INVALID THEME "${theme}"`,
-      '>>> AVAILABLE THEMES: GREEN, AMBER, BLUE',
+      `>>> ОШИБКА: НЕДОПУСТИМАЯ ТЕМА "${theme}"`,
+      '>>> ДОСТУПНЫЕ ТЕМЫ: GREEN, AMBER, BLUE',
       ''
     ].join('\n'));
     triggerGlitchEffect(300);
@@ -535,14 +603,17 @@ const changeColorScheme = (theme) => {
   currentColorScheme.value = themeName.toLowerCase();
   
   printTextToTerminal([
-    `>>> TERMINAL COLOR SCHEME CHANGED TO: ${themeName}`,
-    '>>> SYSTEM RECALIBRATING DISPLAY PARAMETERS...',
-    '>>> DISPLAY RECALIBRATION COMPLETE',
+    `>>> ЦВЕТОВАЯ СХЕМА ТЕРМИНАЛА ИЗМЕНЕНА НА: ${themeName}`,
+    '>>> СИСТЕМА ПЕРЕКАЛИБРОВЫВАЕТ ПАРАМЕТРЫ ДИСПЛЕЯ...',
+    '>>> ПЕРЕКАЛИБРОВКА ДИСПЛЕЯ ЗАВЕРШЕНА',
     ''
   ].join('\n'));
 };
 
-// Функция для создания эффекта глитча/помех
+/**
+ * Создание эффекта глитча/помех на экране
+ * @param {number} duration - Продолжительность эффекта в миллисекундах
+ */
 const triggerGlitchEffect = (duration = 500) => {
   isGlitchActive.value = true;
   
@@ -551,7 +622,9 @@ const triggerGlitchEffect = (duration = 500) => {
   }, duration);
 };
 
-// Component lifecycle
+/**
+ * Жизненный цикл компонента
+ */
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
 });
@@ -634,13 +707,20 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
-$terminal-green: #4afa9a;
-$terminal-dark-green: #052505;
-$terminal-amber: #ffb000;
-$terminal-dark-amber: #251500;
-$terminal-blue: #00ccff;
-$terminal-dark-blue: #001825;
+/**
+ * Цветовые переменные для различных тем терминала
+ */
+$terminal-green: #4afa9a; // Основной зеленый цвет (классический терминал)
+$terminal-dark-green: #052505; // Темно-зеленый фон
+$terminal-amber: #ffb000; // Янтарный цвет (старые мониторы)
+$terminal-dark-amber: #251500; // Темно-янтарный фон
+$terminal-blue: #00ccff; // Синий цвет (современные терминалы)
+$terminal-dark-blue: #001825; // Темно-синий фон
 
+/**
+ * Основной контейнер терминала
+ * Содержит все состояния: выключен, загрузка, рабочий режим
+ */
 .retro-terminal-container {
   width: 100%;
   height: 100%;
@@ -648,7 +728,7 @@ $terminal-dark-blue: #001825;
   border-radius: 12px;
   overflow: hidden;
   background-color: #000;
-  font-family: 'VT323', monospace;
+  font-family: 'VT323', monospace; // Ретро-шрифт для аутентичности
   color: $terminal-green;
   display: flex;
   justify-content: center;
@@ -656,7 +736,9 @@ $terminal-dark-blue: #001825;
   transition: all 0.3s ease;
   z-index: 1;
   
-  // Зеленая тема (по умолчанию)
+  /**
+   * Зеленая тема (по умолчанию) - классический терминал
+   */
   &.theme-green {
     color: $terminal-green;
     background-color: $terminal-dark-green;
@@ -685,7 +767,9 @@ $terminal-dark-blue: #001825;
     }
   }
   
-  // Янтарная тема
+  /**
+   * Янтарная тема - имитация старых мониторов
+   */
   &.theme-amber {
     color: $terminal-amber;
     background-color: $terminal-dark-amber;
@@ -715,7 +799,9 @@ $terminal-dark-blue: #001825;
     }
   }
   
-  // Синяя тема
+  /**
+   * Синяя тема - современный терминал
+   */
   &.theme-blue {
     color: $terminal-blue;
     background-color: $terminal-dark-blue;
@@ -745,7 +831,9 @@ $terminal-dark-blue: #001825;
     }
   }
   
-  // Эффект глитча
+  /**
+   * Эффект глитча - визуальное искажение экрана
+   */
   &.glitch-effect {
     &::before {
       content: '';
@@ -770,6 +858,9 @@ $terminal-dark-blue: #001825;
     }
   }
   
+  /**
+   * Градиентные затемнения сверху и снизу для эффекта глубины
+   */
   &::before {
     content: '';
     position: absolute;
@@ -794,7 +885,9 @@ $terminal-dark-blue: #001825;
     pointer-events: none;
   }
   
-  // Стили для полноэкранного режима
+  /**
+   * Стили для полноэкранного режима
+   */
   &.fullscreen {
     position: fixed;
     top: 0;
@@ -806,6 +899,10 @@ $terminal-dark-blue: #001825;
   }
 }
 
+/**
+ * Экран выключенного терминала
+ * Показывается когда терминал не включен
+ */
 .terminal-off {
   width: 100%;
   height: 100%;
@@ -822,7 +919,7 @@ $terminal-dark-blue: #001825;
     font-size: 24px;
     letter-spacing: 2px;
     text-transform: uppercase;
-    animation: pulse 2s infinite;
+    animation: pulse 2s infinite; // Пульсирующий эффект для привлечения внимания
     text-shadow: 0 0 5px rgba($terminal-green, 0.5);
     margin-bottom: 20px;
   }
@@ -836,6 +933,10 @@ $terminal-dark-blue: #001825;
   }
 }
 
+/**
+ * Экран загрузки терминала
+ * Показывается во время процесса загрузки системы
+ */
 .terminal-booting {
   width: 100%;
   height: 100%;
@@ -847,6 +948,9 @@ $terminal-dark-blue: #001825;
   background-color: $terminal-dark-green;
   position: relative;
   
+  /**
+   * Прогресс-бар загрузки
+   */
   .boot-progress {
     width: 70%;
     height: 30px;
@@ -890,9 +994,12 @@ $terminal-dark-blue: #001825;
     color: rgba($terminal-green, 0.7);
     margin-top: 30px;
     text-shadow: 0 0 3px rgba($terminal-green, 0.5);
-    animation: flicker 2s infinite;
+    animation: flicker 2s infinite; // Эффект мерцания для реалистичности
   }
   
+  /**
+   * Радиальный градиент для эффекта глубины
+   */
   &::before {
     content: '';
     position: absolute;
@@ -910,6 +1017,10 @@ $terminal-dark-blue: #001825;
   }
 }
 
+/**
+ * Рабочий экран терминала
+ * Основной интерфейс для взаимодействия
+ */
 .terminal-screen {
   width: 100%;
   height: 100%;
@@ -918,6 +1029,9 @@ $terminal-dark-blue: #001825;
   overflow: hidden;
   padding: 20px 20px 20px 30px;
   
+  /**
+   * Контейнер содержимого терминала
+   */
   .terminal-content {
     width: 100%;
     height: 100%;
@@ -925,6 +1039,9 @@ $terminal-dark-blue: #001825;
     position: relative;
     z-index: 2;
     
+    /**
+     * Стилизация скроллбара
+     */
     &::-webkit-scrollbar {
       width: 8px;
     }
@@ -939,10 +1056,16 @@ $terminal-dark-blue: #001825;
     }
   }
   
+  /**
+   * История команд и выводов
+   */
   .terminal-history {
     margin-bottom: 10px;
   }
   
+  /**
+   * Отдельная строка в истории
+   */
   .terminal-line {
     line-height: 1.3;
     white-space: pre-wrap;
@@ -950,6 +1073,9 @@ $terminal-dark-blue: #001825;
     text-shadow: 0 0 5px rgba($terminal-green, 0.5);
   }
   
+  /**
+   * Текущая строка, которая печатается
+   */
   .terminal-current-line {
     line-height: 1.3;
     white-space: pre-wrap;
@@ -958,6 +1084,9 @@ $terminal-dark-blue: #001825;
     margin-bottom: 10px;
   }
   
+  /**
+   * Строка ввода команд
+   */
   .terminal-input {
     display: flex;
     align-items: center;
@@ -968,6 +1097,9 @@ $terminal-dark-blue: #001825;
       margin-right: 5px;
     }
     
+    /**
+     * Поле ввода команд
+     */
     .terminal-command-input {
       background: transparent;
       border: none;
@@ -979,6 +1111,9 @@ $terminal-dark-blue: #001825;
       text-shadow: 0 0 5px rgba($terminal-green, 0.5);
       position: relative;
       
+      /**
+       * Мигающий курсор
+       */
       &.cursor-visible::after {
         content: '█';
         animation: blink 1s step-end infinite;
@@ -986,6 +1121,9 @@ $terminal-dark-blue: #001825;
     }
   }
   
+  /**
+   * Эффект свечения экрана
+   */
   .terminal-glow {
     pointer-events: none;
     position: absolute;
@@ -998,6 +1136,9 @@ $terminal-dark-blue: #001825;
   }
 }
 
+/**
+ * Эффект сканирующих линий (имитация старого монитора)
+ */
 .scanlines {
   pointer-events: none;
   position: absolute;
@@ -1014,6 +1155,9 @@ $terminal-dark-blue: #001825;
   z-index: 2;
   opacity: 0.2;
   
+  /**
+   * Дополнительные вертикальные линии
+   */
   &::before {
     content: '';
     position: absolute;
@@ -1027,16 +1171,25 @@ $terminal-dark-blue: #001825;
   }
 }
 
+/**
+ * Анимация мигания курсора
+ */
 @keyframes blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
 
+/**
+ * Анимация пульсации для привлечения внимания
+ */
 @keyframes pulse {
   0%, 100% { opacity: 0.3; }
   50% { opacity: 0.7; }
 }
 
+/**
+ * Анимация мерцания для эффекта старого монитора
+ */
 @keyframes flicker {
   0% { opacity: 0.97; }
   5% { opacity: 0.95; }
@@ -1061,7 +1214,9 @@ $terminal-dark-blue: #001825;
   100% { opacity: 0.95; }
 }
 
-// Power on animation
+/**
+ * Анимация включения питания (эффект старого монитора)
+ */
 @keyframes powerOn {
   0% { 
     filter: brightness(5);
@@ -1089,7 +1244,9 @@ $terminal-dark-blue: #001825;
   }
 }
 
-// Стили для кнопки полноэкранного режима
+/**
+ * Кнопка переключения полноэкранного режима
+ */
 .expand-button {
   position: absolute;
   top: 10px;
@@ -1119,13 +1276,17 @@ $terminal-dark-blue: #001825;
   }
 }
 
-// Анимация сканирования глитча
+/**
+ * Анимация сканирования глитча
+ */
 @keyframes glitch-scan {
   0% { top: -100%; }
   100% { top: 100%; }
 }
 
-// Анимация дрожания текста при глитче
+/**
+ * Анимация дрожания текста при глитче
+ */
 @keyframes glitch-text {
   0% { transform: translateX(0); }
   25% { transform: translateX(-2px); }
