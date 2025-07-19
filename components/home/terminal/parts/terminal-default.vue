@@ -10,9 +10,10 @@
       <div class="terminal-input">
         <span class="terminal-prompt">&gt;</span>
         <input 
+          :key="'terminal-input'"
           type="text" 
           :value="currentCommand"
-          @input="$emit('update:currentCommand', ($event.target as HTMLInputElement)?.value)"
+          @input="e => { console.log('input:', (e.target as HTMLInputElement)?.value); $emit('update:currentCommand', (e.target as HTMLInputElement)?.value) }"
           class="terminal-command-input"
           :class="{ 'cursor-visible': cursorVisible }"
           @keydown.enter="handleCommand"

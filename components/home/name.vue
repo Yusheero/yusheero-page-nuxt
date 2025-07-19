@@ -286,5 +286,7 @@ onMounted(() => {
 
 .typed-text {
   display: inline-block;
+  font-size: 16px;
+  font-weight: 700;
 }
 </style>

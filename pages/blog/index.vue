@@ -14,9 +14,10 @@ useHead({
     <div class="blog-page__container">
       <div class="blog-page__content">
         <BlogItem
-          v-for="data in blogData" 
-          :key="data.id"
+          v-for="(data, index) in blogData" 
+          :key="data.id || index"
           :blogData="data"
+          :blogIndex="index"
           class="blog-view-desktop__item" 
         />
       </div>

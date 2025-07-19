@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { terminalData } from '@/data/terminal';
 import './terminal-styles.scss';
 import { useVoightKampffTest } from '@/utils/useVoightKampffTest';
@@ -373,19 +373,15 @@ const triggerGlitchEffect = (duration = 500) => {
 /**
  * Жизненный цикл компонента
  */
-const handleKeyDown = (e) => {
-  if (!isTerminalBooted.value) return;
-  if (e.key === 'Enter') {
-    handleCommand();
-  }
-};
+// Удаляю handleKeyDown
+// Удаляю onMounted с window.addEventListener
+// Оставляю только onUnmounted для clearAllIntervals
 
-onMounted(() => {
-  window.addEventListener('keydown', handleKeyDown);
+watch(currentCommand, (val) => {
+  console.log('currentCommand changed:', val);
 });
 
 onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeyDown);
   clearAllIntervals();
 });
 </script>
@@ -413,11 +409,11 @@ onUnmounted(() => {
       v-else
       :terminalHistory="terminalHistory"
       :terminalText="terminalText"
-      :currentCommand="currentCommand"
+      :currentCommand="currentCommand.value || ''"
       :cursorVisible="cursorVisible"
       :handleCommand="handleCommand"
       :terminalRef="terminalRef"
-      @update:currentCommand="val => currentCommand.value = val"
+      @update:currentCommand="val => { if (currentCommand && typeof currentCommand === 'object' && 'value' in currentCommand) { currentCommand.value = val } }"
     />
   </div>
 </template>

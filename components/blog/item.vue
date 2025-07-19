@@ -1,14 +1,25 @@
 <script setup>
 import { computed } from 'vue';
 import { Calendar, Tag } from 'lucide-vue-next';
+import { useRouter } from 'vue-router';
 
 // Типизированные пропсы
 const props = defineProps({
   blogData: {
     type: Object,
     required: true
+  },
+  blogIndex: {
+    type: Number,
+    required: true
   }
 });
+
+const router = useRouter();
+
+const handleClick = () => {
+  router.push(`/blog/${props.blogIndex}`);
+};
 
 // Обрезаем длинные названия
 const truncatedTitle = computed(() => {
@@ -26,7 +37,7 @@ const defaultTags = computed(() => {
 </script>
 
 <template>
-  <div class="blog-item">
+  <div class="blog-item" @click="handleClick">
     <div class="blog-item__content">
       <div class="blog-item__header">
         <h2 class="blog-item__title" :title="blogData.title">
@@ -41,18 +52,6 @@ const defaultTags = computed(() => {
         <div v-if="blogData.date" class="blog-item__date">
           <Calendar size="14" />
           <span>{{ blogData.date }}</span>
-        </div>
-        
-        <div class="blog-item__links">
-          <a 
-            class="blog-item__link" 
-            href="#" 
-            target="_blank"
-            rel="noopener noreferrer"
-            @click.prevent
-          >
-            read
-          </a>
         </div>
       </div>
     </div>
