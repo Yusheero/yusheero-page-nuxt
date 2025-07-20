@@ -2,7 +2,14 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { terminalData } from '@/data/terminal';
 import { voightKampffQuestions } from '@/data/voightKampffQuestions';
-import type { VoightKampffQuestion } from '@/data/voightKampffQuestions';
+import type { VoightKampffQuestion as VKQ } from '@/data/voightKampffQuestions';
+
+// Расширяем тип VoightKampffQuestion для поддержки _shuffledAnswers
+declare module '@/data/voightKampffQuestions' {
+  interface VoightKampffQuestion {
+    _shuffledAnswers?: string[];
+  }
+}
 
 export const useTerminalStore = defineStore('terminal', () => {
   // Основные параметры состояния терминала
@@ -237,23 +244,44 @@ export const useTerminalStore = defineStore('terminal', () => {
       return;
     }
     const question = voightKampffQuestions[currentVoightKampffQuestion.value];
-    let questionText = `>>> QUESTION ${currentVoightKampffQuestion.value + 1}/${voightKampffQuestions.length}:\n${question.question}\n`;
+    // Формируем список всех вариантов (правильные + неправильные), перемешиваем
+    const allAnswers = [...question.correctAnswers, ...question.incorrectAnswers];
+    // Перемешиваем варианты
+    const shuffledAnswers = allAnswers
+      .map((a) => ({ sort: Math.random(), value: a }))
+      .sort((a, b) => a.sort - b.sort)
+      .map((a) => a.value);
+    // Сохраняем варианты для текущего вопроса
+    question._shuffledAnswers = shuffledAnswers;
+    // Формируем текст вопроса с вариантами
+    let questionText = `THE QUESTION ${currentVoightKampffQuestion.value + 1}/${voightKampffQuestions.length}:
+${question.question}\n`;
+    shuffledAnswers.forEach((ans, idx) => {
+      questionText += `${idx + 1}. ${ans}\n`;
+    });
+    questionText += '\TYPE THE RIGHT ANSWER NUMBER:';
     printTextToTerminal(questionText);
   };
   
   const processVoightKampffAnswer = (answer: string) => {
     const currentQuestion = voightKampffQuestions[currentVoightKampffQuestion.value];
-    // Убираем дополнительное преобразование в верхний регистр, так как оно уже сделано в updateCurrentCommand
-    const answerUpperCase = answer.trim();
-    terminalHistory.value.push(`> ${answer}`);
+    // Если есть _shuffledAnswers, ожидаем номер
+    let answerText = answer.trim();
     let isHumanLikeResponse = false;
-    if (currentQuestion.correctAnswers.includes(answerUpperCase)) {
+    if (currentQuestion._shuffledAnswers) {
+      const idx = parseInt(answerText, 10) - 1;
+      if (!isNaN(idx) && idx >= 0 && idx < currentQuestion._shuffledAnswers.length) {
+        answerText = currentQuestion._shuffledAnswers[idx];
+      }
+    }
+    terminalHistory.value.push(`> ${answer}`);
+    if (currentQuestion.correctAnswers.includes(answerText)) {
       isHumanLikeResponse = true;
-    } else if (currentQuestion.incorrectAnswers.includes(answerUpperCase)) {
+    } else if (currentQuestion.incorrectAnswers.includes(answerText)) {
       isHumanLikeResponse = false;
     } else {
       isHumanLikeResponse = currentQuestion.correctAnswers.some(
-        correctAnswer => answerUpperCase.includes(correctAnswer)
+        correctAnswer => answerText.includes(correctAnswer)
       );
     }
     let analysisText = '';
