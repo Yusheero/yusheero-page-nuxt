@@ -18,7 +18,7 @@ useHead({
           :key="data.id || index"
           :blogData="data"
           :blogIndex="index"
-          class="blog-view-desktop__item" 
+          class="blog-page__item" 
         />
       </div>
 
@@ -56,7 +56,8 @@ $terminal-text: #4afa9a;
     height: 100%;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
+    overflow-y: auto;
+
     gap: 20px;
     padding: 25px;
     overflow: auto;
@@ -80,6 +81,10 @@ $terminal-text: #4afa9a;
         background: rgba(79, 250, 154, 0.7);
       }
     }
+  }
+
+  &__item {
+    height: 15rem;
   }
 }
 </style>

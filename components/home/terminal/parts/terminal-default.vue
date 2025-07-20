@@ -13,7 +13,10 @@
           :key="'terminal-input'"
           type="text" 
           :value="currentCommand"
-          @input="e => { console.log('input:', (e.target as HTMLInputElement)?.value); $emit('update:currentCommand', (e.target as HTMLInputElement)?.value) }"
+          @input="handleInput"
+          @keydown="handleKeydown"
+          @paste="handlePaste"
+          @change="handleChange"
           class="terminal-command-input"
           :class="{ 'cursor-visible': cursorVisible }"
           @keydown.enter="handleCommand"
@@ -27,14 +30,140 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, nextTick } from 'vue';
+
 const props = defineProps<{
   terminalHistory: string[];
   terminalText: string;
   currentCommand: string;
   cursorVisible: boolean;
   handleCommand: () => void;
-  terminalRef: any;
 }>();
+
+const emit = defineEmits<{
+  'update:currentCommand': [value: string];
+}>();
+
+// Ссылка на DOM элемент терминала для прокрутки
+const terminalRef = ref<HTMLElement | null>(null);
+
+/**
+ * Автоматическая прокрутка к низу терминала
+ */
+const scrollToBottom = () => {
+  if (terminalRef.value) {
+    setTimeout(() => {
+      if (terminalRef.value) {
+        terminalRef.value.scrollTop = terminalRef.value.scrollHeight;
+      }
+    }, 10);
+  }
+};
+
+/**
+ * Обработка ввода с фильтрацией символов
+ */
+const handleInput = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  let value = target.value;
+  
+  // Фильтруем только английские символы, цифры и специальные символы
+  value = value.replace(/[^a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/g, '');
+  
+  // Преобразуем в верхний регистр
+  value = value.toUpperCase();
+  
+  // Обновляем значение в input
+  target.value = value;
+  
+  // Эмитим обновленное значение
+  emit('update:currentCommand', value);
+};
+
+/**
+ * Обработка нажатий клавиш для предотвращения ввода нежелательных символов
+ */
+const handleKeydown = (e: KeyboardEvent) => {
+  // Разрешаем только английские символы, цифры, пробел и специальные символы
+  const allowedKeys = [
+    'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+    'Tab', 'Enter', 'Home', 'End', 'PageUp', 'PageDown'
+  ];
+  
+  const key = e.key;
+  
+  // Если это не разрешенная клавиша управления и не английский символ/цифра
+  if (!allowedKeys.includes(key) && !/^[a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]$/.test(key)) {
+    e.preventDefault();
+    return false;
+  }
+};
+
+/**
+ * Обработка вставки текста с фильтрацией
+ */
+const handlePaste = (e: ClipboardEvent) => {
+  e.preventDefault();
+  
+  const pastedText = e.clipboardData?.getData('text') || '';
+  
+  // Фильтруем только английские символы, цифры и специальные символы
+  let filteredText = pastedText.replace(/[^a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/g, '');
+  
+  // Преобразуем в верхний регистр
+  filteredText = filteredText.toUpperCase();
+  
+  // Получаем текущее значение и позицию курсора
+  const target = e.target as HTMLInputElement;
+  const start = target.selectionStart || 0;
+  const end = target.selectionEnd || 0;
+  const currentValue = target.value;
+  
+  // Вставляем отфильтрованный текст
+  const newValue = currentValue.substring(0, start) + filteredText + currentValue.substring(end);
+  
+  // Обновляем значение в input
+  target.value = newValue;
+  
+  // Устанавливаем позицию курсора после вставленного текста
+  const newCursorPosition = start + filteredText.length;
+  target.setSelectionRange(newCursorPosition, newCursorPosition);
+  
+  // Эмитим обновленное значение
+  emit('update:currentCommand', newValue);
+};
+
+/**
+ * Обработка события change для дополнительной защиты от автозаполнения
+ */
+const handleChange = (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  let value = target.value;
+  
+  // Фильтруем только английские символы, цифры и специальные символы
+  value = value.replace(/[^a-zA-Z0-9\s!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/g, '');
+  
+  // Преобразуем в верхний регистр
+  value = value.toUpperCase();
+  
+  // Обновляем значение в input
+  target.value = value;
+  
+  // Эмитим обновленное значение
+  emit('update:currentCommand', value);
+};
+
+// Следим за изменениями в истории терминала и тексте для автоматической прокрутки
+watch(() => [props.terminalHistory, props.terminalText], () => {
+  nextTick(() => {
+    scrollToBottom();
+  });
+}, { deep: true });
+
+// Прокрутка при монтировании компонента
+nextTick(() => {
+  scrollToBottom();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -53,6 +182,7 @@ $terminal-font: 'VT323', monospace;
   padding: 20px 20px 20px 30px;
 
   .terminal-content {
+    padding: 10px 20px 10px 10px;
     width: 100%;
     height: 100%;
     overflow-y: auto;

@@ -3,15 +3,15 @@
 const plansData = [
   {
     id: 1,
-    title: 'Experience page update',
-    description: 'More tips and tricks for experience view',
-    date: '2025-03-28'
+    title: 'Refactoring Terminal',
+    description: 'More tips and tricks for Terminal on Homepage',
+    date: '2025-07-20'
   },
   {
     id: 2,
-    title: 'Library page update',
-    description: 'More tips and tricks for library view',
-    date: '2025-04-23'
+    title: 'Deploy and SEO optimization',
+    description: 'Its time to finally deploy my page to hosting and set up SEO',
+    date: '2025-07-20'
   },
 ];
 

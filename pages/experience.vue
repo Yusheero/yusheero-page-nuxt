@@ -17,10 +17,10 @@ const points = [
   },
   {
     id: 'housevl',
-    label: 'HOUSEVL',
+    label: 'House VL',
     position: 300,
     info: {
-      title: 'HOUSEVL',
+      title: 'House VL',
       role: 'Frontend Developer',
       years: '2025 - present',
       tags: ['Node.js', 'TypeScript', 'NextJS', 'React'],

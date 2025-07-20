@@ -183,11 +183,11 @@ onMounted(() => {
   &__badge {
     display: flex;
     align-items: center;
-    background: rgba(10, 26, 18, 0.8);
-    color: #4FFA9A;
+    background: #4FFA9A;
+    color: rgba(10, 26, 18, 0.8);
     padding: 6px 8px;
     border-radius: 4px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
     border: 1px solid rgba(79, 250, 154, 0.5);
     text-transform: uppercase;

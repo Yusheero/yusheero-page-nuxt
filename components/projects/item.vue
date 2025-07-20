@@ -154,9 +154,9 @@ const defaultTags = computed(() => {
   &__badge {
     display: flex;
     align-items: center;
-    background: rgba(10, 26, 18, 0.8);
-    color: #4FFA9A;
-    padding: 3px 8px;
+    background: #4FFA9A;
+    color: rgba(10, 26, 18, 0.8);
+    padding: 6px 8px;
     border-radius: 4px;
     font-size: 10px;
     font-weight: 600;

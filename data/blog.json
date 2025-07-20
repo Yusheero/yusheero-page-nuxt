@@ -16,12 +16,12 @@
       "date": "21.01.2025"
     },
     {
-      "title": "Redisign Blog and Library",
+      "title": "Redesign Blog and Library",
       "text": "Added navigation buttons to the Blog page, completely changed the look of the Library page. Of course, this is not the final look of the pages and the site as a whole",
       "date": "24.01.2025"
     },
     {
-      "title": "Full redisign of the site",
+      "title": "Full redesign of the site",
       "text": "Change the color scheme, add new pages, change the layout of the existing pages. Now the site has a more modern and clean look.",
       "date": "24.01.2025"
     },
@@ -34,6 +34,21 @@
       "title": "Library page updated",
       "text": "The mobile version doesn't have a clear design yet, and I'll probably add more details",
       "date": "23.04.2025"
+    },
+    {
+      "title": "Start Nuxt and not came back",
+      "text": "Finally I did it and switched to Nuxt. It was a bit painful, but I understood that this transition was necessary for further growth and optimization. Now SEO will work perfectly and full-fledged routing will appear",
+      "date": "14.07.2025"
+    },
+    {
+      "title": "Whats next hah?",
+      "text": "Now I am refactoring the terminal and improving its functionality. I am also creating pages for projects, posts and reviews. And of course, I am wondering if I should refactor the UI again.",
+      "date": "20.07.2025"
+    },
+    {
+      "title": "Got new Job with NextJS",
+      "text": "New path with React ecosystem. That will be interesting!",
+      "date": "21.07.2025"
     }
   ]
 }

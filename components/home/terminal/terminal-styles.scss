@@ -282,6 +282,7 @@
    }
    
    .boot-info {
+    text-align: center;
      font-size: 16px;
      letter-spacing: 1px;
      color: rgba($terminal-green, 0.7);
@@ -399,6 +400,7 @@
        color: $terminal-green;
        font-family: 'VT323', monospace;
        font-size: 20px;
+       font-weight: 700;
        outline: none;
        flex: 1;
        text-shadow: 0 0 5px rgba($terminal-green, 0.5);
