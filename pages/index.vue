@@ -79,4 +79,24 @@ useHead({
     grid-area: terminal;
   }
 }
+
+@media (max-width: 768px) {
+  .home-page {
+    padding: 1rem;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 140px 180px 250px 250px 120px 300px 160px;
+    grid-template-areas:
+      "logo twitch"
+      "name name"
+      "last-post last-post"
+      "reviews reviews"
+      "tech tech"
+      "gif gif"
+      "contacts contacts";
+
+      &__terminal {
+        display: none;
+      }
+  }
+}
 </style> 

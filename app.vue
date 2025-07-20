@@ -1,27 +1,5 @@
 <script setup>
-import { onBeforeMount, onMounted, onUnmounted } from 'vue'
-import { useStore } from '~/stores/store'
 
-const Navigation = defineAsyncComponent(() => import('@/components/navigation.vue'));
-
-const store = useStore()
-
-const onResize = () => {
-  store.isMobile = window.innerWidth <= 768
-}
-
-onMounted(() => {
-  window.addEventListener('resize', onResize)
-})
-
-onUnmounted(() => { 
-  window.removeEventListener('resize', onResize)
-})
-
-onBeforeMount(() => {
-  store.isMobile = window.innerWidth <= 768
-  console.log('before mount', store.isMobile)
-})
 </script>
 
 <template>
@@ -46,6 +24,10 @@ onBeforeMount(() => {
   font-weight: 600;
   font-size: 22px;
   background: var(--color-primary);
+
+  @media (max-width: 768px) {
+    height: 100%;
+  }
 
   &__container {
     width: 1100px;

@@ -103,10 +103,6 @@ const socialLinks = [
         filter: drop-shadow(0 0 5px rgba(79, 250, 154, 0.7));
       }
     }
-
-    @media (max-width: 768px) {
-      height: 90px;
-    }
   }
   
   &__icon {

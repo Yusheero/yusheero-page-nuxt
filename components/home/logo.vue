@@ -7,16 +7,16 @@
 </template>
 
 <style lang="scss" scoped>
-  .logo-block {
-    height: 100%;
-    width: 100%;
-    border-radius: 12px;
+.logo-block {
+  height: 100%;
+  width: 100%;
+  border-radius: 12px;
 
-    &__image {
-      width: 100%;
-      height: 100%;
-      border-radius: 12px;
-      margin-bottom: -4px;
-    }
+  &__image {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    margin-bottom: -4px;
   }
+}
 </style>
