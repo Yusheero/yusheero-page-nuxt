@@ -64,7 +64,6 @@ const defaultTags = computed(() => {
 .blog-item {
   position: relative;
   width: 100%;
-  height: 100%;
   cursor: pointer;
   border-radius: 5px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -99,7 +98,7 @@ const defaultTags = computed(() => {
   
   &__title {
     margin: 0;
-    font-size: 18px;
+    font-size: 14px;
     color: #4FFA9A;
     text-shadow: 0 0 5px rgba(79, 250, 154, 0.5);
     font-family: inherit;
@@ -128,7 +127,7 @@ const defaultTags = computed(() => {
   }
   
   &__text {
-    font-size: 14px;
+    font-size: 12px;
     line-height: 1.5;
     margin: 0 0 10px;
     color: #CCCCCC;
